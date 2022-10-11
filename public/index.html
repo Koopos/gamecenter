@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="first" width="1200px" height="800px"></canvas>
+    <canvas id="second" width="1200px" height="800px"></canvas>
+    <img id="image1" src="./1.png" />
+    <img id="image2" src="./2.png" />
+</body>
+<script>
+    window.onload=init
+    const areaSize = 50
+    function init() {
+        const [first, second] = getCanvas()
+        drawImage(first, 'image1')
+        drawImage(second, 'image2')
+
+        // first.fillRect(0, 0, 50, 80)
+        // second.fillRect(50, 200, 50, 80)
+
+        const canvasWidth = document.getElementById('first').width
+        const canvasHeight = document.getElementById('first').height
+
+        const firstData = first.getImageData(0,0, canvasWidth, canvasHeight).data
+        const secondData = second.getImageData(0,0,  canvasWidth, canvasHeight).data
+
+        // console.log(getPointRGBA(firstData, 50, 50))
+        // console.log(getPointRGBA(secondData, 50, 50))
+        // rect(first,0,0,'1')
+
+
+        const x = Math.floor(canvasWidth/areaSize);
+        const y =Math.floor(canvasHeight/areaSize);
+
+        const diffMap = {}
+        for(let i=0;i<x;i++) {
+            for(let j =0;j<y;j++) {
+                if(i===0 && j===1) {
+                    debugger
+                }
+                const diffNum = compareArea(firstData, secondData, i, j)
+                diffMap[`${i}-${j}`] = diffNum
+                rect(first, i, j ,diffNum)
+                // rect(second, i, j ,diffNum)
+            }
+        }
+        console.log(diffMap)
+    }
+
+    function getPointRGBA(imageData, pointX, pointY) {
+        const canvasWidth = document.getElementById('first').width
+        const R = pointY*canvasWidth*4 + 4* pointX
+        const G = R + 1
+        const B = R+2
+        const A = R+3
+        return [R, G, B, A].map(v=>imageData[v])
+    }
+
+
+
+    function rect(ctx, pointX, pointY, text) {
+
+        ctx.font = '10px serif';
+        ctx.strokeText(text, pointX*areaSize + areaSize*0.2, pointY*areaSize+areaSize*0.7);
+        ctx.strokeRect(pointX*areaSize, pointY*areaSize, areaSize,areaSize)
+    }
+
+    function compareArea(imageDataA, imageDataB, areaX, areaY) {
+        let diffNum = 0
+        const startX = areaX*areaSize
+        const startY = areaY*areaSize
+
+        for(let i=0;i<areaSize;i++) {
+            for(let j=0;j<areaSize;j++) {
+                const pointX = startX+i
+                const pointY = startY+j
+                const pointA = getPointRGBA(imageDataA, pointX, pointY)
+                const pointB = getPointRGBA(imageDataB, pointX, pointY)
+                pointA.forEach((v, index) => {
+                    if((pointA[index]-pointB[index]) ** 2 > 100) {
+                        diffNum+=1
+                    }
+                })
+            }
+        }
+
+        return diffNum
+    }
+
+    // function
+
+    function getCanvas() {
+        const first = document.getElementById('first')
+        const canvasFirst = first.getContext('2d')
+
+        const second = document.getElementById('second')
+        const canvasSecond = second.getContext('2d')
+
+        return [canvasFirst, canvasSecond]
+    }
+
+    function drawImage(context, image) {
+         const dom = document.getElementById(image)
+        context.drawImage(dom, 0,0)
+        // context.fillRect(0,0, 1200, 800)
+    }
+
+</script>
+</html>
